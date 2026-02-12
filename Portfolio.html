@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sai Prabhath — Cybersecurity Professional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Bebas+Neue&family=Outfit:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --ink:#030712;
+  --ink2:#060d1f;
+  --glass:rgba(6,13,31,0.6);
+  --border:rgba(6,182,212,0.12);
+  --cyan:#06b6d4;
+  --cyan2:#0891b2;
+  --lime:#00ff88;
+  --gold:#f59e0b;
+  --red:#ef4444;
+  --text:#f1f5f9;
+  --muted:#64748b;
+  --dim:#1e293b;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;cursor:none}
+
+/* ─── CURSOR ─── */
+.cur{position:fixed;pointer-events:none;z-index:99999;mix-blend-mode:exclusion}
+.cur-dot{width:8px;height:8px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);transition:.1s}
+.cur-ring{width:44px;height:44px;border:1px solid rgba(255,255,255,0.4);border-radius:50%;transform:translate(-50%,-50%);transition:all .18s cubic-bezier(.25,.46,.45,.94)}
+body:has(a:hover) .cur-dot,.body-hover .cur-dot{transform:translate(-50%,-50%) scale(3);background:var(--cyan)}
+body:has(a:hover) .cur-ring{width:0;height:0;opacity:0}
+
+/* ─── CANVAS ─── */
+#three-canvas{position:fixed;inset:0;z-index:0;opacity:.55}
+
+/* ─── NOISE ─── */
+body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+opacity:.5}
+
+/* ─── LOADER ─── */
+#loader{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;transition:opacity .8s 2.5s,visibility .8s 2.5s}
+#loader.done{opacity:0;visibility:hidden}
+.load-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,8vw,7rem);color:var(--text);letter-spacing:.2em;opacity:0;animation:loadIn .6s .3s forwards}
+.load-bar-wrap{width:280px;height:1px;background:rgba(255,255,255,0.1);overflow:hidden}
+.load-bar{height:100%;background:linear-gradient(90deg,var(--cyan),var(--lime));width:0;animation:loadBar 2s .5s ease-out forwards}
+.load-status{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.2em;opacity:0;animation:loadIn .4s .4s forwards}
+@keyframes loadIn{to{opacity:1}}
+@keyframes loadBar{to{width:100%}}
+
+/* ─── NAV ─── */
+nav{position:fixed;top:0;width:100%;z-index:500;padding:1.4rem 5%;display:flex;justify-content:space-between;align-items:center;
+backdrop-filter:blur(24px) saturate(1.8);background:rgba(3,7,18,0.5);
+border-bottom:1px solid var(--border);transition:all .3s}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.2em;color:var(--text)}
+.logo em{color:var(--cyan);font-style:normal}
+.nav-links{display:flex;gap:2.5rem;list-style:none}
+.nav-links a{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);text-decoration:none;letter-spacing:.12em;text-transform:uppercase;transition:color .3s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-6px;left:0;width:0;height:1px;background:var(--cyan);transition:.3s;box-shadow:0 0 8px var(--cyan)}
+.nav-links a:hover{color:var(--text)}
+.nav-links a:hover::after{width:100%}
+.nav-pill{display:flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.68rem;
+padding:.35rem .9rem;border:1px solid rgba(0,255,136,.25);color:var(--lime);background:rgba(0,255,136,.04)}
+.pulse{width:6px;height:6px;background:var(--lime);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.4)}50%{box-shadow:0 0 0 5px rgba(0,255,136,0)}}
+
+/* ─── HERO ─── */
+#hero{min-height:100vh;display:flex;align-items:center;padding:0 5%;position:relative;z-index:2;overflow:hidden}
+.hero-inner{max-width:1400px;margin:0 auto;width:100%;display:grid;grid-template-columns:1.1fr .9fr;gap:5rem;align-items:center}
+
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--cyan);letter-spacing:.3em;text-transform:uppercase;
+margin-bottom:1.5rem;opacity:0;animation:riseIn .7s .2s forwards}
+.hero-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,9vw,9rem);line-height:.95;margin-bottom:1.5rem;
+opacity:0;animation:riseIn .8s .4s forwards}
+.hero-name .n1{display:block;color:var(--text);-webkit-text-stroke:1px rgba(255,255,255,.06)}
+.hero-name .n2{display:block;
+background:linear-gradient(135deg,var(--cyan) 0%,var(--lime) 50%,var(--cyan) 100%);
+background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+animation:shimmer 4s linear infinite 1s}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+
+.hero-role-wrap{font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--muted);
+margin-bottom:1.8rem;min-height:1.5rem;
+opacity:0;animation:riseIn .7s .6s forwards}
+.hero-role-wrap .typed-text{color:var(--text)}
+.hero-role-wrap .pipe{color:var(--cyan);animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.hero-desc{font-size:1.05rem;color:var(--muted);line-height:1.9;max-width:500px;margin-bottom:3rem;
+opacity:0;animation:riseIn .7s .8s forwards}
+.hero-desc strong{color:var(--text);font-weight:500}
+
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;opacity:0;animation:riseIn .7s 1s forwards}
+.btn-solid{display:inline-flex;align-items:center;gap:.6rem;padding:.95rem 2.4rem;
+background:var(--cyan);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;
+letter-spacing:.08em;text-decoration:none;text-transform:uppercase;transition:all .35s;
+clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.btn-solid:hover{background:var(--lime);transform:translateY(-3px);box-shadow:0 16px 40px rgba(6,182,212,.35)}
+.btn-ghost{display:inline-flex;align-items:center;gap:.6rem;padding:.95rem 2.4rem;
+background:transparent;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;
+letter-spacing:.08em;text-decoration:none;text-transform:uppercase;
+border:1px solid rgba(255,255,255,.15);transition:all .35s;
+clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-3px);box-shadow:0 16px 40px rgba(6,182,212,.1)}
+
+/* HERO RIGHT */
+.hero-right{opacity:0;animation:slideLeft .9s .7s forwards;position:relative}
+@keyframes slideLeft{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+
+.id-card{
+background:linear-gradient(135deg,rgba(6,13,31,.9) 0%,rgba(8,18,40,.95) 100%);
+border:1px solid rgba(6,182,212,.2);
+backdrop-filter:blur(30px);
+padding:2.5rem;position:relative;overflow:hidden;
+box-shadow:0 0 0 1px rgba(6,182,212,.05),0 60px 100px rgba(0,0,0,.7),inset 0 1px 0 rgba(6,182,212,.1)}
+.id-card::before{content:'';position:absolute;top:-100px;right:-100px;width:300px;height:300px;
+background:radial-gradient(circle,rgba(6,182,212,.08),transparent 70%);pointer-events:none}
+.id-card::after{content:'';position:absolute;bottom:-80px;left:-80px;width:240px;height:240px;
+background:radial-gradient(circle,rgba(0,255,136,.05),transparent 70%);pointer-events:none}
+
+.id-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;position:relative;z-index:1}
+.id-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
+.id-code{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--cyan);letter-spacing:.1em}
+
+.id-avatar{width:72px;height:72px;border:2px solid rgba(6,182,212,.3);display:flex;align-items:center;justify-content:center;
+font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--cyan);
+background:rgba(6,182,212,.06);position:relative;z-index:1;margin-bottom:1.5rem}
+
+.id-name-big{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--text);letter-spacing:.1em;margin-bottom:.3rem;position:relative;z-index:1}
+.id-title-sm{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--cyan);margin-bottom:2rem;position:relative;z-index:1}
+
+.id-fields{display:grid;gap:.8rem;position:relative;z-index:1}
+.id-field{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.id-field:last-child{border-bottom:none}
+.id-field-key{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;align-self:center}
+.id-field-val{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text);text-align:right}
+.id-field-val.green{color:var(--lime)}
+.id-field-val.cyan{color:var(--cyan)}
+.id-field-val.gold{color:var(--gold)}
+
+.id-barcode{margin-top:1.5rem;display:flex;gap:2px;align-items:flex-end;height:28px;position:relative;z-index:1}
+.id-barcode span{background:rgba(6,182,212,.4);width:2px;display:block}
+
+/* ─── SECTION BASE ─── */
+section{padding:8rem 5%;position:relative;z-index:2}
+.s-inner{max-width:1300px;margin:0 auto}
+.s-eyebrow{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--cyan);letter-spacing:.3em;text-transform:uppercase;margin-bottom:.8rem}
+.s-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,5vw,5rem);line-height:1;color:var(--text);margin-bottom:.6rem}
+.s-title span{color:var(--cyan)}
+.s-rule{width:60px;height:2px;background:linear-gradient(90deg,var(--cyan),transparent);margin-bottom:4rem;box-shadow:0 0 12px var(--cyan)}
+
+/* ─── ABOUT / SKILLS ─── */
+#about{background:linear-gradient(180deg,var(--ink) 0%,var(--ink2) 100%)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
+.about-text p{font-size:1.02rem;color:var(--muted);line-height:1.95;margin-bottom:1.4rem}
+.about-text p strong{color:var(--text);font-weight:500}
+.about-text p:last-child{margin-bottom:0}
+
+.skills-stack{display:flex;flex-direction:column;gap:.9rem}
+.skill-row{position:relative}
+.skill-label{display:flex;justify-content:space-between;margin-bottom:.4rem}
+.skill-label span:first-child{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text);letter-spacing:.05em}
+.skill-label span:last-child{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--cyan)}
+.skill-track{height:3px;background:rgba(255,255,255,.06);overflow:hidden}
+.skill-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--lime));width:0;transition:width 1.4s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 10px rgba(6,182,212,.5)}
+.skill-cats{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2.5rem}
+.scat{font-family:'JetBrains Mono',monospace;font-size:.66rem;padding:.3rem .8rem;
+border:1px solid rgba(6,182,212,.2);color:var(--muted);background:rgba(6,182,212,.03);
+transition:all .25s}
+.scat:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.08)}
+
+/* ─── PROJECTS ─── */
+#projects{background:var(--ink)}
+.proj-grid{display:grid;gap:1.5rem}
+.pcard{
+background:var(--glass);border:1px solid var(--border);
+backdrop-filter:blur(20px);
+padding:2.5rem 3rem;display:grid;grid-template-columns:1fr auto;
+gap:2rem;align-items:start;transition:all .45s;position:relative;overflow:hidden}
+.pcard::before{content:'';position:absolute;inset:0;
+background:linear-gradient(135deg,rgba(6,182,212,.03) 0%,transparent 60%);
+opacity:0;transition:.4s}
+.pcard::after{content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+background:linear-gradient(180deg,var(--cyan),var(--lime));
+transition:width .4s;opacity:.8}
+.pcard:hover{border-color:rgba(6,182,212,.35);transform:translateY(-4px);
+box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 60px rgba(6,182,212,.04)}
+.pcard:hover::before{opacity:1}
+.pcard:hover::after{width:3px}
+
+.pcard-tags{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
+.ptag{font-family:'JetBrains Mono',monospace;font-size:.62rem;padding:.2rem .65rem;
+border:1px solid rgba(6,182,212,.25);color:var(--cyan);background:rgba(6,182,212,.05)}
+.ptag.lime{border-color:rgba(0,255,136,.25);color:var(--lime);background:rgba(0,255,136,.04)}
+.ptag.gold{border-color:rgba(245,158,11,.25);color:var(--gold);background:rgba(245,158,11,.04)}
+
+.ptitle{font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:600;color:var(--text);margin-bottom:.3rem}
+.pmeta{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:1.2rem;font-style:italic}
+.pdesc{font-size:.9rem;color:var(--muted);line-height:1.8;margin-bottom:1.2rem}
+.pbullets{list-style:none;margin-bottom:1.5rem}
+.pbullets li{font-size:.86rem;color:var(--muted);padding:.22rem 0 .22rem 1.3rem;
+position:relative;line-height:1.7}
+.pbullets li::before{content:'›';position:absolute;left:0;color:var(--cyan);font-size:1.1rem;top:.1rem}
+.pbullets li strong{color:var(--text);font-weight:500}
+.pstack{display:flex;flex-wrap:wrap;gap:.4rem}
+.ptech{font-family:'JetBrains Mono',monospace;font-size:.62rem;padding:.18rem .55rem;
+background:rgba(255,255,255,.03);color:var(--muted);border:1px solid rgba(255,255,255,.07);transition:.2s}
+.ptech:hover{color:var(--cyan);border-color:rgba(6,182,212,.3)}
+
+.pcard-num{font-family:'Bebas Neue',sans-serif;font-size:5rem;color:rgba(6,182,212,.07);line-height:1;
+min-width:80px;text-align:right;align-self:start;letter-spacing:.05em;
+transition:color .4s}
+.pcard:hover .pcard-num{color:rgba(6,182,212,.15)}
+
+/* ─── EXPERIENCE ─── */
+#experience{background:var(--ink2)}
+.timeline{position:relative;padding-left:3rem}
+.timeline::before{content:'';position:absolute;left:0;top:8px;bottom:0;width:1px;
+background:linear-gradient(180deg,var(--cyan),rgba(6,182,212,.1));
+box-shadow:0 0 10px var(--cyan)}
+.titem{position:relative;margin-bottom:3.5rem}
+.titem::before{content:'';position:absolute;left:-3.37rem;top:6px;
+width:14px;height:14px;border:2px solid var(--cyan);background:var(--ink);
+border-radius:50%;box-shadow:0 0 15px var(--cyan),0 0 30px rgba(6,182,212,.3)}
+.t-date{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--cyan);letter-spacing:.12em;margin-bottom:.4rem}
+.t-role{font-size:1.15rem;font-weight:600;color:var(--text);margin-bottom:.2rem}
+.t-org{font-size:.9rem;color:var(--muted);margin-bottom:.9rem}
+.t-bullets{list-style:none}
+.t-bullets li{font-size:.87rem;color:var(--muted);padding:.2rem 0 .2rem 1.2rem;position:relative;line-height:1.75}
+.t-bullets li::before{content:'›';position:absolute;left:0;color:var(--cyan);font-size:1rem;top:.15rem}
+
+/* ─── EDUCATION ─── */
+.edu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem}
+.ecard{background:var(--glass);border:1px solid var(--border);backdrop-filter:blur(20px);
+padding:2.2rem;transition:all .4s;position:relative;overflow:hidden}
+.ecard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+background:linear-gradient(90deg,var(--cyan),var(--lime),transparent);transform:scaleX(0);transform-origin:left;transition:.4s}
+.ecard:hover{border-color:rgba(6,182,212,.3);transform:translateY(-5px);box-shadow:0 25px 60px rgba(0,0,0,.4)}
+.ecard:hover::after{transform:scaleX(1)}
+.edeg{font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:.3rem}
+.euni{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--cyan);margin-bottom:.2rem}
+.edates{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted);margin-bottom:.9rem}
+.edesc{font-size:.84rem;color:var(--muted);line-height:1.75}
+.ebadge{display:inline-block;margin-top:.9rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;
+color:var(--lime);border:1px solid rgba(0,255,136,.3);padding:.22rem .7rem;background:rgba(0,255,136,.04)}
+
+/* ─── CONTACT ─── */
+#contact{background:var(--ink);overflow:hidden}
+.contact-bg{position:absolute;inset:0;pointer-events:none;
+background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(6,182,212,.04) 0%,transparent 70%)}
+.contact-inner{max-width:860px;margin:0 auto;text-align:center;position:relative;z-index:1}
+.contact-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,5vw,5rem);line-height:1;color:var(--text);margin-bottom:1rem}
+.contact-title em{color:var(--cyan);font-style:normal}
+.contact-sub{font-size:1.02rem;color:var(--muted);line-height:1.85;margin-bottom:3.5rem;max-width:520px;margin-left:auto;margin-right:auto}
+.c-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:3rem}
+.c-link{background:var(--glass);border:1px solid var(--border);backdrop-filter:blur(20px);
+padding:1.5rem;text-decoration:none;display:block;transition:all .35s;position:relative;overflow:hidden}
+.c-link::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,182,212,.06),transparent);opacity:0;transition:.35s}
+.c-link:hover{border-color:rgba(6,182,212,.4);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.4),0 0 30px rgba(6,182,212,.06)}
+.c-link:hover::before{opacity:1}
+.c-lkey{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.4rem}
+.c-lval{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--cyan)}
+.clearance{display:inline-flex;align-items:center;gap:.8rem;
+font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--gold);
+border:1px solid rgba(245,158,11,.25);padding:.8rem 2rem;background:rgba(245,158,11,.03)}
+.cl-pulse{width:8px;height:8px;background:var(--gold);border-radius:50%;animation:pulse2 2s infinite}
+@keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 6px transparent}}
+
+/* ─── FOOTER ─── */
+footer{padding:2rem 5%;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;z-index:2;position:relative;flex-wrap:wrap;gap:1rem}
+footer span{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted)}
+footer em{color:var(--cyan);font-style:normal}
+
+/* ─── STATS ─── */
+.stats-strip{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);
+background:rgba(6,13,31,.8);backdrop-filter:blur(20px);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat-cell{padding:2.5rem 1rem;text-align:center;border-right:1px solid var(--border);transition:background .35s}
+.stat-cell:last-child{border-right:none}
+.stat-cell:hover{background:rgba(6,182,212,.02)}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:3.2rem;color:var(--cyan);line-height:1;
+text-shadow:0 0 30px rgba(6,182,212,.5)}
+.stat-l{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-top:.3rem}
+
+/* ─── SCROLL REVEAL ─── */
+.fade{opacity:0;transform:translateY(28px);transition:opacity .75s,transform .75s}
+.fade.in{opacity:1;transform:translateY(0)}
+.fade-l{opacity:0;transform:translateX(-30px);transition:opacity .75s,transform .75s}
+.fade-l.in{opacity:1;transform:translateX(0)}
+.fade-r{opacity:0;transform:translateX(30px);transition:opacity .75s,transform .75s}
+.fade-r.in{opacity:1;transform:translateX(0)}
+
+@keyframes riseIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  .hero-inner{grid-template-columns:1fr}.hero-right{display:none}
+  .about-grid{grid-template-columns:1fr}
+  .stats-strip{grid-template-columns:repeat(2,1fr)}
+  .pcard{grid-template-columns:1fr}.pcard-num{display:none}
+  nav{padding:1rem 4%}.nav-links{gap:1.2rem}
+  .nav-pill{display:none}
+}
+@media(max-width:600px){
+  section{padding:5rem 5%}
+  .nav-links a{font-size:.65rem}
+  .nav-links{gap:.8rem}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cur" id="curDot" style="position:fixed"><div class="cur-dot"></div></div>
+<div class="cur" id="curRing" style="position:fixed"><div class="cur-ring"></div></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="load-name">SPM.SEC</div>
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+  <div class="load-status">INITIALISING SECURITY PROFILE...</div>
+</div>
+
+<!-- THREE.JS CANVAS -->
+<canvas id="three-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">SPM<em>.</em>SEC</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#education">Education</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-pill"><span class="pulse"></span>Available for hire</div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="eyebrow">// MSc Cybersecurity · University of Roehampton</div>
+      <h1 class="hero-name">
+        <span class="n1">Sai Prabhath</span>
+        <span class="n2">Munagapati</span>
+      </h1>
+      <div class="hero-role-wrap">
+        <span class="typed-text" id="typed"></span><span class="pipe">|</span>
+      </div>
+      <p class="hero-desc">
+        <strong>SOC operations. Penetration testing. Digital forensics.</strong><br>
+        Deploying enterprise security platforms, hunting threats, and reconstructing attack chains from raw memory and disk images. SC Clearance eligible August 2026.
+      </p>
+      <div class="hero-actions">
+        <a href="#projects" class="btn-solid">View Projects</a>
+        <a href="mailto:saiprabhath2004@gmail.com" class="btn-ghost">Get In Touch</a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="id-card">
+        <div class="id-top">
+          <div>
+            <div class="id-label">Security Profile</div>
+            <div class="id-code">REF: SPM-2026-SC</div>
+          </div>
+          <div class="id-code" id="live-time"></div>
+        </div>
+        <div class="id-avatar">SP</div>
+        <div class="id-name-big">SAI PRABHATH</div>
+        <div class="id-title-sm">Cybersecurity Professional · SOC · Pentest · Forensics</div>
+        <div class="id-fields">
+          <div class="id-field"><span class="id-field-key">Status</span><span class="id-field-val green">■ AVAILABLE</span></div>
+          <div class="id-field"><span class="id-field-key">Location</span><span class="id-field-val">London, UK</span></div>
+          <div class="id-field"><span class="id-field-key">Education</span><span class="id-field-val cyan">MSc Cyber Security</span></div>
+          <div class="id-field"><span class="id-field-key">BSc</span><span class="id-field-val">Computer Science 2:1</span></div>
+          <div class="id-field"><span class="id-field-key">Clearance</span><span class="id-field-val gold">SC Eligible Aug 2026</span></div>
+          <div class="id-field"><span class="id-field-key">Portfolio</span><span class="id-field-val cyan">prabhath77.github.io</span></div>
+        </div>
+        <div class="id-barcode" id="barcode"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat-cell fade"><div class="stat-n" data-count="7">0</div><div class="stat-l">Security Projects</div></div>
+  <div class="stat-cell fade"><div class="stat-n">2:1</div><div class="stat-l">BSc Honours</div></div>
+  <div class="stat-cell fade"><div class="stat-n" data-count="3">0</div><div class="stat-l">Certifications</div></div>
+  <div class="stat-cell fade"><div class="stat-n">SC</div><div class="stat-l">Clearance Eligible</div></div>
+</div>
+
+<!-- ABOUT + SKILLS -->
+<section id="about">
+  <div class="s-inner">
+    <div class="about-grid">
+      <div class="about-text fade-l">
+        <div class="s-eyebrow">01 // about</div>
+        <h2 class="s-title">Who <span>I Am</span></h2>
+        <div class="s-rule"></div>
+        <p>MSc Cyber Security candidate at the University of Roehampton with a <strong>2:1 BSc in Computer Science</strong> from Queen's University Belfast. I operate across the full security spectrum — from deploying SOC platforms to hunting malware in raw memory dumps.</p>
+        <p>I've built and integrated <strong>TheHive, MISP, and Cortex</strong> from the ground up, conducted end-to-end web application penetration tests with professional reporting, and performed three-part digital forensic investigations mapping persistence chains to <strong>MITRE ATT&CK TTPs</strong>.</p>
+        <p>Strong GRC foundation: <strong>NIST CSF, ISO 27001, OWASP Top 10, GDPR, ACPO guidelines</strong>. I think offensively and defend strategically.</p>
+      </div>
+
+      <div class="fade-r">
+        <div class="skills-stack">
+          <div class="skill-row"><div class="skill-label"><span>SOC & Incident Response</span><span>95%</span></div><div class="skill-track"><div class="skill-fill" data-w="95"></div></div></div>
+          <div class="skill-row"><div class="skill-label"><span>Penetration Testing</span><span>88%</span></div><div class="skill-track"><div class="skill-fill" data-w="88"></div></div></div>
+          <div class="skill-row"><div class="skill-label"><span>Digital Forensics</span><span>90%</span></div><div class="skill-track"><div class="skill-fill" data-w="90"></div></div></div>
+          <div class="skill-row"><div class="skill-label"><span>Security Automation / Python</span><span>82%</span></div><div class="skill-track"><div class="skill-fill" data-w="82"></div></div></div>
+          <div class="skill-row"><div class="skill-label"><span>Network Security</span><span>85%</span></div><div class="skill-track"><div class="skill-fill" data-w="85"></div></div></div>
+          <div class="skill-row"><div class="skill-label"><span>GRC & Compliance</span><span>87%</span></div><div class="skill-track"><div class="skill-fill" data-w="87"></div></div></div>
+        </div>
+        <div class="skill-cats fade">
+          <span class="scat">TheHive 5</span><span class="scat">MISP</span><span class="scat">Cortex</span>
+          <span class="scat">Volatility 3</span><span class="scat">Burp Suite</span><span class="scat">Nmap</span>
+          <span class="scat">Autopsy</span><span class="scat">RegRipper</span><span class="scat">FTK Imager</span>
+          <span class="scat">MITRE ATT&CK</span><span class="scat">Docker</span><span class="scat">Kali Linux</span>
+          <span class="scat">Python</span><span class="scat">Metasploit</span><span class="scat">Wireshark</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="s-inner">
+    <div class="fade"><div class="s-eyebrow">02 // portfolio</div>
+    <h2 class="s-title">Security <span>Projects</span></h2>
+    <div class="s-rule"></div></div>
+
+    <div class="proj-grid">
+      <div class="pcard fade">
+        <div>
+          <div class="pcard-tags"><span class="ptag">SOC Platform</span><span class="ptag lime">Security Automation</span><span class="ptag">Threat Intelligence</span></div>
+          <div class="ptitle">Security Operations Centre — TheHive, MISP & Cortex</div>
+          <div class="pmeta">Cyber Security Automation Module · University of Roehampton · 2026</div>
+          <p class="pdesc">Production-grade SOC platform built from scratch. Full Cassandra/Elasticsearch backend, live threat intelligence integration, automated enrichment pipeline, and Python-driven case automation — deployed and integrated across a 6-person team.</p>
+          <ul class="pbullets">
+            <li>Provisioned <strong>Cassandra + Elasticsearch</strong> backend; activated StrangeBee Community License for TheHive 5</li>
+            <li>Integrated <strong>MISP feeds</strong> for real-time IOC correlation and bi-directional threat intelligence sharing</li>
+            <li>Configured <strong>Cortex analysers</strong> (VirusTotal, AbuseIPDB, URLScan) automating observable enrichment</li>
+            <li>Built <strong>Python/TheHive4py</strong> automation: SIEM alert ingestion, categorisation logic, automated case creation</li>
+            <li>Designed IR playbooks (phishing, malware, ransomware) + SOC KPI tracking framework</li>
+          </ul>
+          <div class="pstack"><span class="ptech">TheHive 5</span><span class="ptech">MISP</span><span class="ptech">Cortex</span><span class="ptech">Cassandra</span><span class="ptech">Elasticsearch</span><span class="ptech">Python</span><span class="ptech">Docker</span><span class="ptech">Ubuntu</span></div>
+        </div>
+        <div class="pcard-num">01</div>
+      </div>
+
+      <div class="pcard fade">
+        <div>
+          <div class="pcard-tags"><span class="ptag">Penetration Testing</span><span class="ptag lime">Web App Security</span><span class="ptag gold">CVSS v3</span></div>
+          <div class="ptitle">Web Application Penetration Testing Portfolio</div>
+          <div class="pmeta">Security Testing Module CMP-L021 · University of Roehampton · 2026</div>
+          <p class="pdesc">End-to-end scoped penetration test: reconnaissance through exploitation, with a professional pentest report covering CVSS scoring, OWASP mapping, and a non-technical executive summary addressing GDPR exposure.</p>
+          <ul class="pbullets">
+            <li>Nmap enumeration of ports, services, version fingerprints — risk assessment communicated to simulated client</li>
+            <li>Manually exploited <strong>SQL Injection</strong> via Burp Suite — extracted user credentials including 'liamh' password hash</li>
+            <li>Demonstrated <strong>Reflected XSS</strong> across all viable input vectors; mapped full app surface to XSS types</li>
+            <li>Authored pentest report: <strong>2 High CVEs with CVSS v3 strings</strong>, 6 vulns → OWASP Top 10 + NIST, exec summary</li>
+          </ul>
+          <div class="pstack"><span class="ptech">Nmap</span><span class="ptech">Burp Suite</span><span class="ptech">SQLi</span><span class="ptech">XSS</span><span class="ptech">CVSS v3</span><span class="ptech">OWASP Top 10</span><span class="ptech">NIST CSF</span></div>
+        </div>
+        <div class="pcard-num">02</div>
+      </div>
+
+      <div class="pcard fade">
+        <div>
+          <div class="pcard-tags"><span class="ptag">Digital Forensics</span><span class="ptag lime">Memory Analysis</span><span class="ptag gold">MITRE ATT&CK</span></div>
+          <div class="ptitle">Multi-Stage Digital Forensics Investigation</div>
+          <div class="pmeta">Digital Forensics Module CMP-L020-0 · University of Roehampton · 2026</div>
+          <p class="pdesc">Three-part ACPO-compliant investigation — USB disk forensics with encrypted container recovery, Volatility 3 memory analysis of compromised Windows VM, and deep Registry examination reconstructing a full insider threat attack chain.</p>
+          <ul class="pbullets">
+            <li>Decrypted hidden <strong>VeraCrypt container</strong>: located key file, computed SHA-256 hash as password</li>
+            <li><strong>Volatility 3</strong> memory forensics: execution timelines for POWERSHELL.exe, ATOMICSERVICE.EXE, full SID attribution</li>
+            <li><strong>RegRipper</strong>: BAM records, Prefetch timelines, AtomicRedTeam persistence mechanisms fully reconstructed</li>
+            <li>TTPs mapped to <strong>MITRE ATT&CK</strong> T1055, T1036.003, T1053, T1059 — full attack narrative delivered</li>
+          </ul>
+          <div class="pstack"><span class="ptech">Autopsy</span><span class="ptech">FTK Imager</span><span class="ptech">Volatility 3</span><span class="ptech">RegRipper</span><span class="ptech">VeraCrypt</span><span class="ptech">MITRE ATT&CK</span><span class="ptech">ACPO</span></div>
+        </div>
+        <div class="pcard-num">03</div>
+      </div>
+
+      <div class="pcard fade">
+        <div>
+          <div class="pcard-tags"><span class="ptag">Network Security</span><span class="ptag">Monitoring</span></div>
+          <div class="ptitle">Multi-VM Enterprise Network Security Sandbox</div>
+          <div class="pmeta">Networking & Security Practice Module · University of Roehampton · 2026</div>
+          <ul class="pbullets">
+            <li>4-VM VirtualBox topology with Zabbix monitoring, SSH hardening, Nmap recon, Wireshark analysis, and iptables segmentation</li>
+          </ul>
+          <div class="pstack"><span class="ptech">VirtualBox</span><span class="ptech">Zabbix</span><span class="ptech">SSH</span><span class="ptech">Nmap</span><span class="ptech">iptables</span><span class="ptech">Wireshark</span></div>
+        </div>
+        <div class="pcard-num">04</div>
+      </div>
+
+      <div class="pcard fade">
+        <div>
+          <div class="pcard-tags"><span class="ptag">Malware Analysis</span><span class="ptag gold">IOC Extraction</span></div>
+          <div class="ptitle">Malware Analysis — Isolated Sandbox Environment</div>
+          <div class="pmeta">Academic Coursework · Queen's University Belfast · 2024</div>
+          <ul class="pbullets">
+            <li>Static + dynamic analysis of malicious binaries using IDA Pro — extracted IOC sets (hashes, mutexes, C2 indicators, persistence keys)</li>
+          </ul>
+          <div class="pstack"><span class="ptech">IDA Pro</span><span class="ptech">Sandbox</span><span class="ptech">Python</span><span class="ptech">Behavioral Analysis</span></div>
+        </div>
+        <div class="pcard-num">05</div>
+      </div>
+
+      <div class="pcard fade">
+        <div>
+          <div class="pcard-tags"><span class="ptag">Cloud</span><span class="ptag">Distributed Systems</span><span class="ptag lime">GitHub</span></div>
+          <div class="ptitle">Cloud-Native NP-Complete Solver</div>
+          <div class="pmeta">Final Year Project · Queen's University Belfast · 2024–2025 · <a href="https://github.com/Prabhath77/soduku-containerized-np-solver" target="_blank" style="color:var(--cyan)">github.com/Prabhath77 ↗</a></div>
+          <ul class="pbullets">
+            <li>Distributed Sudoku solver on Docker + Kubernetes — Master-Worker parallelism, benchmarked 3 algorithm variants</li>
+          </ul>
+          <div class="pstack"><span class="ptech">Docker</span><span class="ptech">Kubernetes</span><span class="ptech">Node.js</span><span class="ptech">Distributed Systems</span></div>
+        </div>
+        <div class="pcard-num">06</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="s-inner">
+    <div class="fade"><div class="s-eyebrow">03 // experience</div>
+    <h2 class="s-title">Professional <span>History</span></h2>
+    <div class="s-rule"></div></div>
+    <div class="timeline">
+      <div class="titem fade">
+        <div class="t-date">JAN 2026</div>
+        <div class="t-role">IAM Consulting Simulation</div>
+        <div class="t-org">Tata Group — Virtual Internship</div>
+        <ul class="t-bullets">
+          <li>Designed enterprise IAM architecture for 150,000+ users — RBAC, MFA, PAM across 200+ apps with Azure AD, Okta, CyberArk</li>
+          <li>Built 7-phase GDPR/SOX compliant implementation roadmap; SCIM provisioning protocol design</li>
+        </ul>
+      </div>
+      <div class="titem fade">
+        <div class="t-date">AUG 2023 — AUG 2024</div>
+        <div class="t-role">Digital Placement Student</div>
+        <div class="t-org">HSC Leadership Centre, Belfast</div>
+        <ul class="t-bullets">
+          <li>Produced cybersecurity awareness training; automated workflows reducing project time by 15% across 12+ initiatives</li>
+          <li>Managed sensitive healthcare data under strict GDPR compliance in a live healthcare regulatory environment</li>
+        </ul>
+      </div>
+      <div class="titem fade">
+        <div class="t-date">APR — MAY 2023</div>
+        <div class="t-role">Phishing Prevention & Auth Security</div>
+        <div class="t-org">Mastercard Virtual Program</div>
+        <ul class="t-bullets">
+          <li>Analysed social engineering scenarios; developed phishing detection + MFA countermeasure strategies</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<section id="education">
+  <div class="s-inner">
+    <div class="fade"><div class="s-eyebrow">04 // academic</div>
+    <h2 class="s-title">Education & <span>Training</span></h2>
+    <div class="s-rule"></div></div>
+    <div class="edu-grid">
+      <div class="ecard fade">
+        <div class="edeg">MSc Cyber Security</div>
+        <div class="euni">University of Roehampton, London</div>
+        <div class="edates">Sept 2025 — Aug 2026</div>
+        <div class="edesc">Digital Forensics · Security Testing · Cyber Security Automation · Cyber Risk Management · Networking & Security Practice</div>
+        <span class="ebadge">In Progress</span>
+      </div>
+      <div class="ecard fade">
+        <div class="edeg">BSc Computer Science</div>
+        <div class="euni">Queen's University Belfast</div>
+        <div class="edates">Sept 2021 — June 2025</div>
+        <div class="edesc">Network Security · Malware Analysis · Cloud Computing · Systems Security · Cryptography · Data Structures</div>
+        <span class="ebadge">2:1 Honours</span>
+      </div>
+      <div class="ecard fade">
+        <div class="edeg">Certifications</div>
+        <div class="euni">Ongoing Professional Development</div>
+        <div class="edates">2021 — Present</div>
+        <div class="edesc">Penetration Testing Professional (ITmasters · In Progress) · Hack The Box Academy (Ongoing) · Coursera & Udemy Security Modules · Linux SysAdmin (Belfast Met)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-bg"></div>
+  <div class="s-inner">
+    <div class="contact-inner">
+      <div class="fade"><div class="s-eyebrow" style="text-align:center">05 // contact</div>
+      <h2 class="contact-title">Let's Build Something<br><em>Secure</em></h2>
+      <p class="contact-sub">Actively seeking junior SOC Analyst, Penetration Tester, or Cybersecurity Analyst roles. Available immediately. SC Clearance eligible August 2026.</p></div>
+      <div class="c-links fade">
+        <a href="mailto:saiprabhath2004@gmail.com" class="c-link"><div class="c-lkey">Email</div><div class="c-lval">saiprabhath2004@gmail.com</div></a>
+        <a href="https://linkedin.com/in/sai-prabhath-753402220" target="_blank" class="c-link"><div class="c-lkey">LinkedIn</div><div class="c-lval">sai-prabhath-753402220</div></a>
+        <a href="https://github.com/Prabhath77" target="_blank" class="c-link"><div class="c-lkey">GitHub</div><div class="c-lval">Prabhath77</div></a>
+        <div class="c-link"><div class="c-lkey">Phone</div><div class="c-lval">+44 7435 386409</div></div>
+      </div>
+      <div class="clearance fade"><span class="cl-pulse"></span>SC Security Clearance Eligible — 5-Year UK Residency August 2026</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span><em>SPM.SEC</em> · Sai Prabhath Munagapati · London, UK</span>
+  <span>prabhath77<em>.github.io</em></span>
+</footer>
+
+<script>
+/* ─── CURSOR ─── */
+const dot=document.getElementById('curDot'),ring=document.getElementById('curRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+(function tick(){
+  dot.style.cssText=`left:${mx}px;top:${my}px`;
+  rx+=(mx-rx)*.13;ry+=(my-ry)*.13;
+  ring.style.cssText=`left:${rx}px;top:${ry}px`;
+  requestAnimationFrame(tick);
+})();
+
+/* ─── THREE.JS PARTICLE NETWORK ─── */
+(()=>{
+  const canvas=document.getElementById('three-canvas');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(innerWidth,innerHeight);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,1000);
+  camera.position.z=18;
+
+  const N=120;
+  const positions=new Float32Array(N*3);
+  const vels=[];
+  for(let i=0;i<N;i++){
+    positions[i*3]=  (Math.random()-.5)*40;
+    positions[i*3+1]=(Math.random()-.5)*24;
+    positions[i*3+2]=(Math.random()-.5)*20;
+    vels.push({x:(Math.random()-.5)*.012,y:(Math.random()-.5)*.008,z:(Math.random()-.5)*.005});
+  }
+  const pGeo=new THREE.BufferGeometry();
+  pGeo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  const pMat=new THREE.PointsMaterial({color:0x06b6d4,size:.14,transparent:true,opacity:.8});
+  const pts=new THREE.Points(pGeo,pMat);
+  scene.add(pts);
+
+  // Line geometry (connections)
+  const maxLines=300;
+  const lPos=new Float32Array(maxLines*6);
+  const lGeo=new THREE.BufferGeometry();
+  lGeo.setAttribute('position',new THREE.BufferAttribute(lPos,3));
+  const lMat=new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0x06b6d4,transparent:true,opacity:.15}));
+  scene.add(lMat);
+
+  let mouse={x:0,y:0};
+  document.addEventListener('mousemove',e=>{mouse.x=(e.clientX/innerWidth-.5)*2;mouse.y=-(e.clientY/innerHeight-.5)*2});
+  window.addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+
+  let frame=0;
+  (function animate(){
+    requestAnimationFrame(animate);frame++;
+    const pos=pGeo.attributes.position.array;
+    for(let i=0;i<N;i++){
+      pos[i*3]+=vels[i].x;pos[i*3+1]+=vels[i].y;pos[i*3+2]+=vels[i].z;
+      if(Math.abs(pos[i*3])>20){vels[i].x*=-1}
+      if(Math.abs(pos[i*3+1])>12){vels[i].y*=-1}
+      if(Math.abs(pos[i*3+2])>10){vels[i].z*=-1}
+    }
+    pGeo.attributes.position.needsUpdate=true;
+
+    // Draw connections
+    let li=0;
+    for(let a=0;a<N&&li<maxLines;a++){
+      for(let b=a+1;b<N&&li<maxLines;b++){
+        const dx=pos[a*3]-pos[b*3],dy=pos[a*3+1]-pos[b*3+1],dz=pos[a*3+2]-pos[b*3+2];
+        const d=Math.sqrt(dx*dx+dy*dy+dz*dz);
+        if(d<5){
+          lPos[li*6]=pos[a*3];lPos[li*6+1]=pos[a*3+1];lPos[li*6+2]=pos[a*3+2];
+          lPos[li*6+3]=pos[b*3];lPos[li*6+4]=pos[b*3+1];lPos[li*6+5]=pos[b*3+2];
+          li++;
+        }
+      }
+    }
+    lGeo.attributes.position.needsUpdate=true;
+    lGeo.setDrawRange(0,li*2);
+
+    camera.position.x+=(mouse.x*2-camera.position.x)*.02;
+    camera.position.y+=(mouse.y*1.2-camera.position.y)*.02;
+    camera.lookAt(scene.position);
+    renderer.render(scene,camera);
+  })();
+})();
+
+/* ─── TYPED TEXT ─── */
+const roles=['SOC Analyst','Penetration Tester','Digital Forensics Investigator','Security Automation Engineer','Threat Intelligence Analyst'];
+let ri=0,ci=0,del=false;
+const tel=document.getElementById('typed');
+(function type(){
+  const cur=roles[ri];
+  if(del){tel.textContent=cur.substring(0,--ci);if(ci===0){del=false;ri=(ri+1)%roles.length;setTimeout(type,500);return}setTimeout(type,38);}
+  else{tel.textContent=cur.substring(0,++ci);if(ci===cur.length){del=true;setTimeout(type,2400);return}setTimeout(type,72);}
+})();
+
+/* ─── LIVE TIME ─── */
+const liveTime=document.getElementById('live-time');
+setInterval(()=>{liveTime.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false})},1000);
+
+/* ─── BARCODE ─── */
+const bc=document.getElementById('barcode');
+for(let i=0;i<40;i++){
+  const b=document.createElement('span');
+  const h=8+Math.random()*18;
+  b.style.cssText=`height:${h}px;width:${Math.random()>.6?3:2}px;background:rgba(6,182,212,${.3+Math.random()*.4})`;
+  bc.appendChild(b);
+}
+
+/* ─── SCROLL REVEAL ─── */
+const all=[...document.querySelectorAll('.fade,.fade-l,.fade-r')];
+const io=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>{e.target.classList.add('in');
+    const fill=e.target.querySelector('.skill-fill');if(fill)fill.style.width=fill.dataset.w+'%';
+    const cnt=e.target.querySelector('[data-count]');
+    if(cnt){let n=0;const t=+cnt.dataset.count;const ti=setInterval(()=>{cnt.textContent=++n;if(n>=t)clearInterval(ti)},120);}
+  },i*60);io.unobserve(e.target);}});
+},{threshold:.08});
+all.forEach(el=>io.observe(el));
+
+/* ─── LOADER ─── */
+window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loader').classList.add('done')},2800)});
+</script>
+</body>
+</html>
